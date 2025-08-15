@@ -1,0 +1,8 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+# (Optional) Force a modern Node so native fetch is available
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = []
