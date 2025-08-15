@@ -1,20 +1,31 @@
 // netlify/functions/ai.js
-// Uses native fetch (Node 18+) — no extra packages needed.
 
-exports.handler = async (event) => {
+import fetch from "node-fetch";
+
+export async function handler(event) {
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method not allowed" }),
+    };
+  }
+
   try {
-    if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: "Method Not Allowed" };
-    }
+    const { message } = JSON.parse(event.body);
 
-    const { message } = JSON.parse(event.body || "{}");
-    if (!message || !message.trim()) {
-      return { statusCode: 400, body: "Message is required" };
+    if (!message) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "No message provided" }),
+      };
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return { statusCode: 500, body: "OPENAI_API_KEY not set" };
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "Missing OpenAI API key" }),
+      };
     }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -24,29 +35,29 @@ exports.handler = async (event) => {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.6,
-        messages: [
-          { role: "system", content: "You are GabniceAi Assist — friendly, concise, and helpful." },
-          { role: "user", content: message }
-        ]
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: message }],
       }),
     });
 
-    if (!response.ok) {
-      const txt = await response.text();
-      return { statusCode: response.status, body: txt };
-    }
-
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Hmm, I couldn't find a reply.";
+
+    if (data.error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: data.error.message }),
+      };
+    }
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reply }),
+      body: JSON.stringify({ reply: data.choices[0].message.content }),
     };
-  } catch (err) {
-    return { statusCode: 500, body: `Server error: ${err.message}` };
+
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
   }
-};
+}
