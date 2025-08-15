@@ -1,47 +1,44 @@
-const chat = document.getElementById("chat");
-const text = document.getElementById("text");
-const send = document.getElementById("send");
+// script.js
 
-function addMsg(content, who = "bot") {
-  const div = document.createElement("div");
-  div.className = `msg ${who}`;
-  div.textContent = content;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+  const chatBox = document.getElementById("chat-box");
 
-async function sendMsg() {
-  const msg = text.value.trim();
-  if (!msg) return;
-  addMsg(msg, "user");
-  text.value = "";
+  chatForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  // show thinking placeholder
-  const thinking = document.createElement("div");
-  thinking.className = "msg bot";
-  thinking.textContent = "…";
-  chat.appendChild(thinking);
-  chat.scrollTop = chat.scrollHeight;
+    const message = chatInput.value.trim();
+    if (!message) return;
 
-  try {
-    const res = await fetch("/.netlify/functions/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg })
-    });
+    // Display user message
+    appendMessage("You", message);
+    chatInput.value = "";
 
-    const data = await res.json().catch(() => ({}));
-    thinking.remove();
-    if (!res.ok) {
-      addMsg(`Error: ${data.error || res.statusText || "Request failed"}`, "bot");
-      return;
+    try {
+      const res = await fetch("/.netlify/functions/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await res.json();
+
+      if (data.reply) {
+        appendMessage("Gabnice AI", data.reply);
+      } else {
+        appendMessage("Gabnice AI", "❌ Error: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      appendMessage("Gabnice AI", "⚠️ Connection error: " + err.message);
     }
-    addMsg(data.reply || "No reply received.", "bot");
-  } catch (e) {
-    thinking.remove();
-    addMsg(`Network error: ${e.message}`, "bot");
-  }
-}
+  });
 
-send.addEventListener("click", sendMsg);
-text.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMsg(); });
+  function appendMessage(sender, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "message";
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+});
