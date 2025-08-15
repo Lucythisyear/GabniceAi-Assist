@@ -17,7 +17,8 @@
 
 <script>
 const messagesDiv = document.getElementById("messages");
-const input = document.getElementById("user-input");
+const input = document.getElementById("user-input
+                                    ");
 
 input.addEventListener("keypress", async (e) => {
   if (e.key === "Enter") {
@@ -58,4 +59,55 @@ async function sendMessage() {
     const data = await response.json();
     document.getElementById("chat-output").innerText += "\nAI: " + data.reply;
 }
+</script><script>
+  const messages = document.getElementById('messages');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+
+  function appendMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.classList.add('message', sender);
+    msg.innerText = text;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  async function send() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    appendMessage(text, 'user');
+    userInput.value = '';
+
+    // show a tiny typing indicator
+    const typing = document.createElement('div');
+    typing.classList.add('message', 'bot');
+    typing.innerText = '…';
+    messages.appendChild(typing);
+    messages.scrollTop = messages.scrollHeight;
+
+    try {
+      const res = await fetch('/.netlify/functions/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await res.json();
+      typing.remove();
+      appendMessage(data.reply || "I couldn't generate a reply.", 'bot');
+    } catch (err) {
+      typing.remove();
+      // Demo fallback if the function or key isn’t ready yet
+      appendMessage(
+        "Hi! I'm GabniceAI Assist. This is demo mode. Add your API key in Netlify and I’ll give real answers.",
+        'bot'
+      );
+    }
+  }
+
+  sendBtn.addEventListener('click', send);
+  userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') send();
+  });
 </script>
