@@ -45,3 +45,17 @@ input.addEventListener("keypress", async (e) => {
   }
 });
 </script>
+<script>
+async function sendMessage() {
+    const userMessage = document.getElementById("user-input").value;
+
+    const response = await fetch("/.netlify/functions/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage })
+    });
+
+    const data = await response.json();
+    document.getElementById("chat-output").innerText += "\nAI: " + data.reply;
+}
+</script>
