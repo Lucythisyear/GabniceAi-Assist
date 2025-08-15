@@ -1,12 +1,21 @@
 // netlify/functions/ai.js
-const fetch = require("node-fetch");
+// Uses native fetch (Node 18+) — no extra packages needed.
 
-exports.handler = async function(event) {
+exports.handler = async (event) => {
   try {
-    const { message } = JSON.parse(event.body);
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: "Method Not Allowed" };
+    }
 
-    // Replace with your OpenAI API key
+    const { message } = JSON.parse(event.body || "{}");
+    if (!message || !message.trim()) {
+      return { statusCode: 400, body: "Message is required" };
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return { statusCode: 500, body: "OPENAI_API_KEY not set" };
+    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -15,20 +24,29 @@ exports.handler = async function(event) {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }],
+        model: "gpt-4o-mini",
+        temperature: 0.6,
+        messages: [
+          { role: "system", content: "You are GabniceAi Assist — friendly, concise, and helpful." },
+          { role: "user", content: message }
+        ]
       }),
     });
 
+    if (!response.ok) {
+      const txt = await response.text();
+      return { statusCode: response.status, body: txt };
+    }
+
     const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Hmm, I couldn't find a reply.";
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ reply: data.choices[0].message.content }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reply }),
     };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-    };
+  } catch (err) {
+    return { statusCode: 500, body: `Server error: ${err.message}` };
   }
 };
