@@ -1,44 +1,38 @@
-// script.js
+// server.js
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
+import dotenv from "dotenv";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const chatForm = document.getElementById("chat-form");
-  const chatInput = document.getElementById("chat-input");
-  const chatBox = document.getElementById("chat-box");
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  chatForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+app.post("/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
 
-    const message = chatInput.value.trim();
-    if (!message) return;
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: message }]
+      })
+    });
 
-    // Display user message
-    appendMessage("You", message);
-    chatInput.value = "";
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error contacting OpenAI");
+  }
+});
 
-    try {
-      const res = await fetch("/.netlify/functions/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-
-      const data = await res.json();
-
-      if (data.reply) {
-        appendMessage("Gabnice AI", data.reply);
-      } else {
-        appendMessage("Gabnice AI", "❌ Error: " + (data.error || "Unknown error"));
-      }
-    } catch (err) {
-      appendMessage("Gabnice AI", "⚠️ Connection error: " + err.message);
-    }
-  });
-
-  function appendMessage(sender, text) {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = "message";
-    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+app.listen(3000, () => console.log("Server running on port 3000"));
   }
 });
