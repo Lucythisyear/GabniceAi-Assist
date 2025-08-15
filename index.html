@@ -1,106 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GabniceAI Assist</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f0f0f;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        #chat-container {
-            width: 100%;
-            max-width: 500px;
-            background: #1a1a1a;
-            padding: 20px;
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            height: 80vh;
-        }
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
-        .message {
-            padding: 8px 10px;
-            margin: 5px 0;
-            border-radius: 6px;
-        }
-        .user {
-            background: #007bff;
-            align-self: flex-end;
-        }
-        .bot {
-            background: #333;
-            align-self: flex-start;
-        }
-        #input-container {
-            display: flex;
-        }
-        #user-input {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px 0 0 6px;
-            outline: none;
-        }
-        #send-btn {
-            padding: 10px;
-            border: none;
-            background: #007bff;
-            color: white;
-            border-radius: 0 6px 6px 0;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gabnice AI Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+    }
+    header {
+      background-color: gold;
+      color: black;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    #chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      border-top: 1px solid #333;
+      border-bottom: 1px solid #333;
+    }
+    .message {
+      margin: 8px 0;
+    }
+    form {
+      display: flex;
+      padding: 10px;
+      background-color: #222;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1em;
+      border: none;
+      outline: none;
+      background-color: #333;
+      color: white;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      background-color: gold;
+      color: black;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ffdd00;
+    }
+  </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="messages"></div>
-        <div id="input-container">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-btn">Send</button>
-        </div>
-    </div>
 
-    <script>
-        const messages = document.getElementById('messages');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
+  <header>🤖 Gabnice AI Assistant</header>
 
-        function appendMessage(text, sender) {
-            const message = document.createElement('div');
-            message.classList.add('message', sender);
-            message.innerText = text;
-            messages.appendChild(message);
-            messages.scrollTop = messages.scrollHeight;
-        }
+  <div id="chat-box"></div>
 
-        sendBtn.addEventListener('click', () => {
-            const text = userInput.value.trim();
-            if (text === '') return;
+  <form id="chat-form">
+    <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
 
-            appendMessage(text, 'user');
-            userInput.value = '';
-
-            // Fake bot reply for now
-            setTimeout(() => {
-                appendMessage("Hi, I'm GabniceAI Assist! I’ll give smart answers when you add an API key.", 'bot');
-            }, 500);
-        });
-
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendBtn.click();
-        });
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
