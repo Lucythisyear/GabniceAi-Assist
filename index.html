@@ -1,113 +1,106 @@
-<header>
-  <nav>
-    <div class="logo">GabniceAi Assist</div>
-  </nav>
-</header>
-
-<main>
-  <!-- Chat Section -->
-  <section id="chat">
-    <h2>Talk to GabniceAi Assist</h2>
-    <div class="chatbox">
-      <div id="messages"></div>
-      <input type="text" id="user-input" placeholder="Type a message and press Enter">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GabniceAI Assist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 500px;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .message {
+            padding: 8px 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+        }
+        .user {
+            background: #007bff;
+            align-self: flex-end;
+        }
+        .bot {
+            background: #333;
+            align-self: flex-start;
+        }
+        #input-container {
+            display: flex;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px 0 0 6px;
+            outline: none;
+        }
+        #send-btn {
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
     </div>
-  </section>
-</main>
 
-<script>
-const messagesDiv = document.getElementById("messages");
-const input = document.getElementById("user-input
-                                    ");
+    <script>
+        const messages = document.getElementById('messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
 
-input.addEventListener("keypress", async (e) => {
-  if (e.key === "Enter") {
-    const message = input.value.trim();
-    if (!message) return;
+        function appendMessage(text, sender) {
+            const message = document.createElement('div');
+            message.classList.add('message', sender);
+            message.innerText = text;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
 
-    messagesDiv.innerHTML += `<div class="user-msg">${message}</div>`;
-    input.value = "";
+        sendBtn.addEventListener('click', () => {
+            const text = userInput.value.trim();
+            if (text === '') return;
 
-    // Show "thinking..."
-    messagesDiv.innerHTML += `<div class="ai-msg">Thinking...</div>`;
+            appendMessage(text, 'user');
+            userInput.value = '';
 
-    try {
-      const res = await fetch("/.netlify/functions/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: message })
-      });
+            // Fake bot reply for now
+            setTimeout(() => {
+                appendMessage("Hi, I'm GabniceAI Assist! I’ll give smart answers when you add an API key.", 'bot');
+            }, 500);
+        });
 
-      const data = await res.json();
-      messagesDiv.innerHTML += `<div class="ai-msg">${data.reply}</div>`;
-    } catch (err) {
-      messagesDiv.innerHTML += `<div class="ai-msg error">Error: ${err.message}</div>`;
-    }
-  }
-});
-</script>
-<script>
-async function sendMessage() {
-    const userMessage = document.getElementById("user-input").value;
-
-    const response = await fetch("/.netlify/functions/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage })
-    });
-
-    const data = await response.json();
-    document.getElementById("chat-output").innerText += "\nAI: " + data.reply;
-}
-</script><script>
-  const messages = document.getElementById('messages');
-  const userInput = document.getElementById('user-input');
-  const sendBtn = document.getElementById('send-btn');
-
-  function appendMessage(text, sender) {
-    const msg = document.createElement('div');
-    msg.classList.add('message', sender);
-    msg.innerText = text;
-    messages.appendChild(msg);
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  async function send() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    appendMessage(text, 'user');
-    userInput.value = '';
-
-    // show a tiny typing indicator
-    const typing = document.createElement('div');
-    typing.classList.add('message', 'bot');
-    typing.innerText = '…';
-    messages.appendChild(typing);
-    messages.scrollTop = messages.scrollHeight;
-
-    try {
-      const res = await fetch('/.netlify/functions/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
-
-      const data = await res.json();
-      typing.remove();
-      appendMessage(data.reply || "I couldn't generate a reply.", 'bot');
-    } catch (err) {
-      typing.remove();
-      // Demo fallback if the function or key isn’t ready yet
-      appendMessage(
-        "Hi! I'm GabniceAI Assist. This is demo mode. Add your API key in Netlify and I’ll give real answers.",
-        'bot'
-      );
-    }
-  }
-
-  sendBtn.addEventListener('click', send);
-  userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') send();
-  });
-</script>
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendBtn.click();
+        });
+    </script>
+</body>
+</html>
