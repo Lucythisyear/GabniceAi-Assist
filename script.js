@@ -1,28 +1,47 @@
-document.getElementById("send-btn").addEventListener("click", sendMessage);
+const chat = document.getElementById("chat");
+const text = document.getElementById("text");
+const send = document.getElementById("send");
 
-async function sendMessage() {
-  const inputField = document.getElementById("user-input");
-  const message = inputField.value.trim();
-  if (!message) return;
+function addMsg(content, who = "bot") {
+  const div = document.createElement("div");
+  div.className = `msg ${who}`;
+  div.textContent = content;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
 
-  displayMessage("You", message);
-  inputField.value = "";
+async function sendMsg() {
+  const msg = text.value.trim();
+  if (!msg) return;
+  addMsg(msg, "user");
+  text.value = "";
+
+  // show thinking placeholder
+  const thinking = document.createElement("div");
+  thinking.className = "msg bot";
+  thinking.textContent = "…";
+  chat.appendChild(thinking);
+  chat.scrollTop = chat.scrollHeight;
 
   try {
     const res = await fetch("/.netlify/functions/ai", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
     });
 
-    const data = await res.json();
-    displayMessage("GabniceAI", data.reply);
-  } catch (error) {
-    displayMessage("GabniceAI", "Error: " + error.message);
+    const data = await res.json().catch(() => ({}));
+    thinking.remove();
+    if (!res.ok) {
+      addMsg(`Error: ${data.error || res.statusText || "Request failed"}`, "bot");
+      return;
+    }
+    addMsg(data.reply || "No reply received.", "bot");
+  } catch (e) {
+    thinking.remove();
+    addMsg(`Network error: ${e.message}`, "bot");
   }
 }
 
-function displayMessage(sender, text) {
-  const chatBox = document.getElementById("chat-box");
-  chatBox.innerHTML += `<p><strong>${sender}:</strong> ${text}</p>`;
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
+send.addEventListener("click", sendMsg);
+text.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMsg(); });
