@@ -1,8 +1,8 @@
 // server.js
 import express from "express";
-import fetch from "node-fetch";
 import cors from "cors";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
 dotenv.config();
 const app = express();
@@ -10,29 +10,28 @@ app.use(cors());
 app.use(express.json());
 
 app.post("/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
+  const userMessage = req.body.message;
 
+  try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }]
+        messages: [{ role: "user", content: userMessage }],
       })
     });
 
     const data = await response.json();
-    res.json(data);
+    res.json({ reply: data.choices[0].message.content });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error contacting OpenAI");
+    res.status(500).json({ error: "Something went wrong" });
   }
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
-  }
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
